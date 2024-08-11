@@ -2,37 +2,24 @@ import { INVALID_MOVE } from "boardgame.io/core";
 
 const BOARD_SIZE = 5;
 
-export const TicTacToe = {
+export const ColorWar = {
   setup: () => ({
     boardSize: BOARD_SIZE,
     cells: Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0)),
   }),
 
-  moves: {
-    clickCell: ({ G, playerID }, id) => {
-      const [x, y] = id.split("-").map(Number);
-      const cells = getCells(G, playerID);
-
-      if (cells.length === 0) {
-        if (G.cells[x][y] !== 0) {
-          console.log(`${x}, ${y} is not empty`);
-          return INVALID_MOVE;
-        }
-
-        G.cells[x][y] = playerID === "1" ? 3 : -3;
-      } else {
-        if (
-          (playerID === "1" && G.cells[x][y] <= 0) ||
-          (playerID === "0" && G.cells[x][y] >= 0)
-        ) {
-          console.log(`${x}, ${y} is not in ${playerID}'s cells`);
-          return INVALID_MOVE;
-        }
-
-        G.cells[x][y] += playerID === "1" ? 1 : -1;
-      }
-
-      spreadCells(G, playerID);
+  phases: {
+    init: {
+      moves: { initializeCell },
+      start: true,
+      endIf: ({ G }) => {
+        const cells = getPlayerCells(G, "1");
+        return cells.length === 1;
+      },
+      next: "spread",
+    },
+    spread: {
+      moves: { selectCell },
     },
   },
 
@@ -43,7 +30,7 @@ export const TicTacToe = {
 
   endIf: ({ G, ctx }) => {
     const playerID = ctx.currentPlayer;
-    const cells = getCells(G, playerID);
+    const cells = getPlayerCells(G, playerID);
     if (cells.length === 0 && ctx.turn > 2) {
       return { winner: playerID === "1" ? "0" : "1" };
     }
@@ -51,28 +38,58 @@ export const TicTacToe = {
 
   ai: {
     enumerate: (G, ctx, playerID) => {
-      let moves = [];
+      let possibleMoves = [];
       for (let i = 0; i < BOARD_SIZE; i++) {
         for (let j = 0; j < BOARD_SIZE; j++) {
           if (ctx.turn <= 2) {
-            moves.push({ move: "clickCell", args: `${i}-${j}` });
+            possibleMoves.push({ move: "selectCell", args: `${i}-${j}` });
           }
         }
       }
 
       if (ctx.turn > 2) {
-        const cells = getCells(G, playerID);
+        const cells = getPlayerCells(G, playerID);
         for (let cell of cells) {
-          moves.push({ move: "clickCell", args: `${cell[0]}-${cell[1]}` });
+          possibleMoves.push({
+            move: "selectCell",
+            args: `${cell[0]}-${cell[1]}`,
+          });
         }
       }
 
-      return moves;
+      return possibleMoves;
     },
   },
 };
 
-function getCells(G, playerID) {
+function initializeCell({ G, playerID }, id) {
+  const [x, y] = id.split("-").map(Number);
+
+  if (G.cells[x][y] !== 0) {
+    console.log(`${x}, ${y} is not empty`);
+    return INVALID_MOVE;
+  }
+
+  G.cells[x][y] = playerID === "1" ? 3 : -3;
+}
+
+function selectCell({ G, playerID }, id) {
+  const [x, y] = id.split("-").map(Number);
+
+  if (
+    (playerID === "1" && G.cells[x][y] <= 0) ||
+    (playerID === "0" && G.cells[x][y] >= 0)
+  ) {
+    console.log(`${x}, ${y} is not in ${playerID}'s cells`);
+    return INVALID_MOVE;
+  }
+
+  G.cells[x][y] += playerID === "1" ? 1 : -1;
+
+  spreadPlayerCells(G, playerID);
+}
+
+function getPlayerCells(G, playerID) {
   const cells = [];
   for (let i = 0; i < BOARD_SIZE; i++) {
     for (let j = 0; j < BOARD_SIZE; j++) {
@@ -87,7 +104,7 @@ function getCells(G, playerID) {
   return cells;
 }
 
-function processCell(G, x, y, value) {
+function updateCell(G, x, y, value) {
   if (x < 0 || x >= BOARD_SIZE || y < 0 || y >= BOARD_SIZE) {
     return;
   }
@@ -104,7 +121,7 @@ function processCell(G, x, y, value) {
   }
 }
 
-function getFourCells(G, playerID) {
+function getCellsToSpread(G, playerID) {
   const cells = [];
   for (let i = 0; i < BOARD_SIZE; i++) {
     for (let j = 0; j < BOARD_SIZE; j++) {
@@ -123,21 +140,21 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function spreadCells(G, playerID) {
+async function spreadPlayerCells(G, playerID) {
   while (true) {
-    const cells = getFourCells(G, playerID);
+    const cells = getCellsToSpread(G, playerID);
     if (cells.length === 0) {
       break;
     }
     for (let cell of cells) {
       const [x, y] = cell;
-      processCell(G, x, y, 0);
+      updateCell(G, x, y, 0);
 
       const value = playerID === "1" ? 1 : -1;
-      processCell(G, x - 1, y, value);
-      processCell(G, x + 1, y, value);
-      processCell(G, x, y - 1, value);
-      processCell(G, x, y + 1, value);
+      updateCell(G, x - 1, y, value);
+      updateCell(G, x + 1, y, value);
+      updateCell(G, x, y - 1, value);
+      updateCell(G, x, y + 1, value);
     }
   }
 }

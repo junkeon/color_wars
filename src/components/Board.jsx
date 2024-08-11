@@ -1,7 +1,14 @@
 import React from "react";
 
-export function TicTacToeBoard({ ctx, G, moves }) {
-  const onClick = (id) => moves.clickCell(id);
+export function ColorWarBoard({ ctx, G, moves }) {
+
+  const onClick = (id) => {
+    if (ctx.phase === "init") {
+      moves.initializeCell(id);
+    } else {
+      moves.selectCell(id);
+    }
+  };
 
   const renderWinner = () => {
     if (ctx.gameover) {
