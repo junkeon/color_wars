@@ -109,8 +109,8 @@ function getFourCells(G, playerID) {
   for (let i = 0; i < BOARD_SIZE; i++) {
     for (let j = 0; j < BOARD_SIZE; j++) {
       if (
-        (playerID === "1" && Gcells[i][j] >= 4) ||
-        (playerID === "0" && Gcells[i][j] <= -4)
+        (playerID === "1" && G.cells[i][j] >= 4) ||
+        (playerID === "0" && G.cells[i][j] <= -4)
       ) {
         cells.push([i, j]);
       }
