@@ -24,15 +24,17 @@ export function ColorWarBoard({ ctx, G, moves }) {
   const cellStyle = {
     border: "1px solid #555",
     borderRadius: "20px",
-    width: "150px",
-    height: "150px",
-    lineHeight: "150px",
+    width: "150px", // 150px inner border
+    height: "150px", // 150px inner border
+    lineHeight: "150px", // 150px inner border
     textAlign: "center",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     fontSize: "50px",
     margin: "10px",
+    boxSizing: "border-box", // include border in the element's total width and height
+
   };
 
   const renderCell = (i, j) => {
@@ -43,12 +45,12 @@ export function ColorWarBoard({ ctx, G, moves }) {
 
     return (
       <td key={`${i}-${j}`}>
-        <button
-          style={{ ...cellStyle, color: cellColor, borderWidth }}
+        <div
+          style={{ ...cellStyle, color: cellColor, borderWidth, cursor: "pointer" }}
           onClick={() => onClick(`${i}-${j}`)}
         >
           {cellValue === 0 ? "" : cellValue}
-        </button>
+        </div>
       </td>
     );
   };
