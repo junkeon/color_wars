@@ -12,6 +12,8 @@ export function initializeCell({ G, playerID }, id) {
 }
 
 export function selectCell({ G, playerID }, id) {
+  G.history = [];
+
   const [x, y] = id.split("-").map(Number);
 
   if (
@@ -75,11 +77,13 @@ export function updateCell(G, x, y, value) {
 }
 
 export async function spreadPlayerCells(G, playerID) {
+  G.history.push(JSON.parse(JSON.stringify(G.cells)));
   while (true) {
     const cells = getCellsToSpread(G, playerID);
     if (cells.length === 0) {
       break;
     }
+    G.history.push(JSON.parse(JSON.stringify(G.cells)));
     for (let cell of cells) {
       const [x, y] = cell;
       updateCell(G, x, y, 0);
@@ -90,6 +94,7 @@ export async function spreadPlayerCells(G, playerID) {
       updateCell(G, x, y - 1, value);
       updateCell(G, x, y + 1, value);
     }
+    G.history.push(JSON.parse(JSON.stringify(G.cells)));
   }
 }
 
@@ -114,8 +119,4 @@ export function getPossibleMoves(G, ctx, playerID) {
   }
 
   return possibleMoves;
-}
-
-export function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }

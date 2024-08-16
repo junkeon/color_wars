@@ -11,6 +11,7 @@ export const ColorWar = {
   setup: () => ({
     boardSize: BOARD_SIZE,
     cells: Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(0)),
+    history: [],
   }),
 
   phases: {
